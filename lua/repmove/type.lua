@@ -1,3 +1,3 @@
 --- @class RepMove.RepeatInfo
---- @field prev? function
---- @field next? function
+--- @field backward function
+--- @field forward function

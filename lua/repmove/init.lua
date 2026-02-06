@@ -1,35 +1,38 @@
 ---@diagnostic disable: missing-parameter
 local M = {}
 
---- @param value string
+--- @param value any
 --- @return function
-local function value_wrap(value)
+local function ensure_function(value)
+  if type(value) == 'function' then return value end
   return function() return value end
 end
 
 --- @type RepMove.RepeatInfo
-local last_motion = {}
+local last_motion = { forward = ensure_function(';'), backward = ensure_function(',') }
 
 --- @param func function
 --- @param args table
---- @return function|nil
-local function get_repeatable_function(func, args)
+--- @return function
+local function repeatable_wrap(func, args)
   return function() return func(unpack(args)) end
 end
 
---- @generic T1 function
---- @generic T2 function
---- @param prev_func T1|string
---- @param next_func T2|string
+--- @param prev_func function|string
+--- @param next_func function|string
 --- @param is_prev boolean
---- @return T1|T2|fun():string
-local function repeat_wrap(prev_func, next_func, is_prev)
-  if type(prev_func) == 'string' then prev_func = value_wrap(prev_func) end
-  if type(next_func) == 'string' then next_func = value_wrap(next_func) end
+--- @param backward function|string
+--- @param forward function|string
+--- @return function
+local function repeat_wrap(prev_func, next_func, is_prev, backward, forward)
+  prev_func = ensure_function(prev_func)
+  next_func = ensure_function(next_func)
+  backward = ensure_function(backward)
+  forward = ensure_function(forward)
   return function(...)
     local args = { ... }
-    last_motion.prev = get_repeatable_function(is_prev and next_func or prev_func, args)
-    last_motion.next = get_repeatable_function(is_prev and prev_func or next_func, args)
+    last_motion.forward = repeatable_wrap(forward, args)
+    last_motion.backward = repeatable_wrap(backward, args)
     if is_prev then
       return prev_func(...)
     else
@@ -39,53 +42,20 @@ local function repeat_wrap(prev_func, next_func, is_prev)
 end
 
 --- Wrap two repeatable actions.
---- When `prev_func`/`next_func` are strings, returns functions that produce the keys to feed.
---- @generic TPrev: function
---- @generic TNext: function
---- @param prev_func TPrev|string
---- @param next_func TNext|string
---- @return TPrev|fun(): string
---- @return TNext|fun(): string
-function M.make(prev_func, next_func)
-  return repeat_wrap(prev_func, next_func, true), repeat_wrap(prev_func, next_func, false)
+--- @param prev function|string
+--- @param next function|string
+--- @param comma? function|string
+--- @param semicolon? function|string
+--- @return function
+--- @return function
+function M.make(prev, next, comma, semicolon)
+  comma = comma or prev
+  semicolon = semicolon or next
+  return repeat_wrap(prev, next, true, comma, semicolon), repeat_wrap(prev, next, false, comma, semicolon)
 end
 
-function M.builtin_f()
-  last_motion.prev, last_motion.next = nil, nil
-  return 'f'
-end
-
-function M.builtin_F()
-  last_motion.prev, last_motion.next = nil, nil
-  return 'F'
-end
-
-function M.builtin_t()
-  last_motion.prev, last_motion.next = nil, nil
-  return 't'
-end
-
-function M.builtin_T()
-  last_motion.prev, last_motion.next = nil, nil
-  return 'T'
-end
-
---- @return any
-function M.comma()
-  if last_motion.prev then
-    return last_motion.prev()
-  else
-    return ','
-  end
-end
-
---- @return any
-function M.semicolon()
-  if last_motion.next then
-    return last_motion.next()
-  else
-    return ';'
-  end
-end
+-- NOTE: We must wrap here to ensure we can get the changed "backword" and "forward"
+function M.comma() return last_motion.backward() end
+function M.semicolon() return last_motion.forward() end
 
 return M
