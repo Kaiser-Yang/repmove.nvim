@@ -170,7 +170,7 @@ local repmove = require('repmove')
 local ts_repeat_move = require('nvim-treesitter.textobjects.repeatable_move')
 
 -- Make treesitter motions repeatable
-local next_func, prev_func = repmove.make(
+local prev_func, next_func = repmove.make(
   ts_repeat_move.builtin_F,
   ts_repeat_move.builtin_f,
   ',',
@@ -389,7 +389,7 @@ local repmove = require('repmove')
 local ts_repeat_move = require('nvim-treesitter.textobjects.repeatable_move')
 
 -- 使 treesitter 移动可重复
-local next_func, prev_func = repmove.make(
+local prev_func, next_func = repmove.make(
   ts_repeat_move.builtin_F,
   ts_repeat_move.builtin_f,
   ',',
