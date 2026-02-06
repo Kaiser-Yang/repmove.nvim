@@ -64,7 +64,7 @@ vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
 vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
 ```
 
-After setting this up, any motion you wrap with `repmove.make()` can be repeated using `;` (forward) and `,` (backward).
+After setting this up, any motion you wrap with `repmove.make()` can be repeated using `;` (next) and `,` (previous).
 
 ### Step 2: Wrap Your Motions
 
