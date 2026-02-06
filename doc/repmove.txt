@@ -1,0 +1,350 @@
+*repmove.txt*  Repeatable motions for Neovim
+
+==============================================================================
+CONTENTS                                                    *repmove-contents*
+
+    1. Introduction ................................. |repmove-introduction|
+    2. Installation ................................. |repmove-installation|
+    3. Quick Start .................................. |repmove-quickstart|
+    4. Usage ........................................ |repmove-usage|
+    5. API .......................................... |repmove-api|
+    6. Configuration ................................ |repmove-configuration|
+    7. Examples ..................................... |repmove-examples|
+    8. FAQ .......................................... |repmove-faq|
+    9. License ...................................... |repmove-license|
+
+==============================================================================
+1. INTRODUCTION                                         *repmove-introduction*
+
+repmove.nvim is a Neovim plugin that lets |;| and |,| repeat a wide range of
+motions and jump actions—so you can replay your last navigation (not just
+f/t) forward or backward with consistent behavior.
+
+The plugin was inspired by nvim-treesitter-textobjects and was created to
+solve the problem of conflicting repeat movement bindings when using multiple
+navigation plugins together (such as flash.nvim, nvim-treesitter-textobjects,
+etc.).
+
+Key Features:~
+  • Universal repeat movement support for any motion
+  • Works with any jump plugin (flash.nvim, hop.nvim, etc.)
+  • Simple and intuitive API
+  • Consistent behavior across different motions
+  • Minimal configuration required
+
+==============================================================================
+2. INSTALLATION                                         *repmove-installation*
+
+Using lazy.nvim:~
+>lua
+    {
+      "Kaiser-Yang/repmove.nvim",
+      config = function()
+        -- Your configuration here
+      end,
+    }
+<
+
+Using packer.nvim:~
+>lua
+    use {
+      'Kaiser-Yang/repmove.nvim',
+      config = function()
+        -- Your configuration here
+      end
+    }
+<
+
+Using vim-plug:~
+>vim
+    Plug 'Kaiser-Yang/repmove.nvim'
+<
+
+==============================================================================
+3. QUICK START                                           *repmove-quickstart*
+
+Basic configuration with default f/F/t/T motions:~
+>lua
+    local repmove = require('repmove')
+
+    -- Create repeatable f and F
+    local f_forward, f_backward = repmove.make('F', 'f', ',', ';')
+
+    -- Bind to keys
+    vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_backward, { expr = true })
+
+    -- Bind comma and semicolon to repeat
+    vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, { expr = true })
+<
+
+==============================================================================
+4. USAGE                                                       *repmove-usage*
+
+The plugin works by wrapping your motion functions and storing the last used
+motion. When you press |;| or |,|, it replays the last motion in the
+appropriate direction.
+
+Basic Workflow:~
+  1. Use |repmove.make()| to create repeatable versions of your motions
+  2. Bind the returned functions to your motion keys (e.g., f, F, t, T)
+  3. Bind |;| to |repmove.semicolon()| to repeat forward
+  4. Bind |,| to |repmove.comma()| to repeat backward
+
+Once configured, any motion you execute through the wrapped functions will
+be repeatable with |;| and |,|.
+
+==============================================================================
+5. API                                                           *repmove-api*
+
+------------------------------------------------------------------------------
+repmove.make({prev}, {next}, {comma}, {semicolon})              *repmove.make*
+
+    Creates a pair of repeatable motion functions.
+
+    Parameters:~
+      {prev}        (function|string) The backward motion function or key
+      {next}        (function|string) The forward motion function or key
+      {comma}       (function|string, optional) Function to call when `,` is
+                    pressed (defaults to {prev})
+      {semicolon}   (function|string, optional) Function to call when `;` is
+                    pressed (defaults to {next})
+
+    Returns:~
+      function, function
+        • First return: The backward motion wrapper (bind to your backward
+          key, e.g., 'F')
+        • Second return: The forward motion wrapper (bind to your forward
+          key, e.g., 'f')
+
+    Example:~
+>lua
+        local repmove = require('repmove')
+        
+        -- Simple usage - comma defaults to 'F', semicolon defaults to 'f'
+        local backward, forward = repmove.make('F', 'f')
+        
+        -- With explicit repeat behavior
+        local backward, forward = repmove.make('F', 'f', ',', ';')
+        
+        -- With flash.nvim
+        local backward, forward = repmove.make(
+          '<Plug>(flash-F)',
+          '<Plug>(flash-f)',
+          '<Plug>(flash-F)',
+          '<Plug>(flash-f)'
+        )
+<
+
+------------------------------------------------------------------------------
+repmove.semicolon()                                       *repmove.semicolon*
+
+    Repeats the last motion forward. This function should be bound to the
+    |;| key.
+
+    Returns:~
+      The result of calling the last forward motion function.
+
+    Example:~
+>lua
+        vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, 
+                      { expr = true })
+<
+
+------------------------------------------------------------------------------
+repmove.comma()                                               *repmove.comma*
+
+    Repeats the last motion backward. This function should be bound to the
+    |,| key.
+
+    Returns:~
+      The result of calling the last backward motion function.
+
+    Example:~
+>lua
+        vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, 
+                      { expr = true })
+<
+
+==============================================================================
+6. CONFIGURATION                                       *repmove-configuration*
+
+The plugin requires manual configuration. There is no default setup function
+because the appropriate configuration depends on your specific use case and
+which plugins you use.
+
+See |repmove-examples| for common configuration patterns.
+
+==============================================================================
+7. EXAMPLES                                                 *repmove-examples*
+
+------------------------------------------------------------------------------
+EXAMPLE 1: DEFAULT F/T MOTIONS                    *repmove-example-default*
+
+For users who want basic repeat movement with default Vim motions:
+>lua
+    local repmove = require('repmove')
+
+    -- f and F
+    local f_back, f_forward = repmove.make('F', 'f', ',', ';')
+    vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_back, { expr = true })
+
+    -- t and T
+    local t_back, t_forward = repmove.make('T', 't', ',', ';')
+    vim.keymap.set({ 'n', 'x', 'o' }, 't', t_forward, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'T', t_back, { expr = true })
+
+    -- Repeat keys
+    vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, { expr = true })
+<
+
+------------------------------------------------------------------------------
+EXAMPLE 2: FLASH.NVIM INTEGRATION                   *repmove-example-flash*
+
+For users of flash.nvim who want to preserve repeat movement:
+>lua
+    local repmove = require('repmove')
+    local flash = require('flash')
+
+    -- Define flash motions as Plug mappings
+    vim.keymap.set({ 'n', 'x', 'o' }, '<Plug>(flash-f)', function()
+      flash.jump({ pattern = vim.fn.getcmdline() })
+    end)
+
+    vim.keymap.set({ 'n', 'x', 'o' }, '<Plug>(flash-F)', function()
+      flash.jump({ 
+        pattern = vim.fn.getcmdline(), 
+        search = { forward = false } 
+      })
+    end)
+
+    -- Create repeatable versions
+    local f_back, f_forward = repmove.make(
+      '<Plug>(flash-F)',
+      '<Plug>(flash-f)',
+      '<Plug>(flash-F)',
+      '<Plug>(flash-f)'
+    )
+
+    -- Bind to keys
+    vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_back, { expr = true })
+
+    -- Repeat keys
+    vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, { expr = true })
+<
+
+------------------------------------------------------------------------------
+EXAMPLE 3: CUSTOM MOTION FUNCTIONS              *repmove-example-custom*
+
+For users who want to create custom repeatable motions:
+>lua
+    local repmove = require('repmove')
+
+    -- Custom search functions
+    local function search_forward()
+      vim.fn.search('\\<\\w\\+\\>', 'W')
+    end
+
+    local function search_backward()
+      vim.fn.search('\\<\\w\\+\\>', 'bW')
+    end
+
+    -- Make them repeatable
+    local back, forward = repmove.make(
+      search_backward,
+      search_forward,
+      search_backward,
+      search_forward
+    )
+
+    vim.keymap.set({ 'n', 'x', 'o' }, '<leader>w', forward, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, '<leader>b', back, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, { expr = true })
+<
+
+------------------------------------------------------------------------------
+EXAMPLE 4: TREESITTER TEXTOBJECTS               *repmove-example-treesitter*
+
+For users of nvim-treesitter-textobjects:
+>lua
+    local repmove = require('repmove')
+    local ts_repeat = require('nvim-treesitter.textobjects.repeatable_move')
+
+    -- Use treesitter's builtin f/F
+    local f_back, f_forward = repmove.make(
+      ts_repeat.builtin_F,
+      ts_repeat.builtin_f,
+      ts_repeat.builtin_F,
+      ts_repeat.builtin_f
+    )
+
+    vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_back, { expr = true })
+
+    -- Repeat keys
+    vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, { expr = true })
+<
+
+==============================================================================
+8. FAQ                                                           *repmove-faq*
+
+Q: Why do I need this plugin?~
+A: If you use multiple navigation plugins (like flash.nvim, hop.nvim,
+   nvim-treesitter-textobjects), they often conflict when trying to bind
+   |;| and |,| for repeat movement. This plugin provides a universal
+   solution that works with any motion.
+
+Q: Can I use this with the default f/F/t/T motions?~
+A: Yes! See |repmove-example-default| for configuration.
+
+Q: Does this work with operators (like d, c, y)?~
+A: Yes, as long as you include 'o' (operator-pending mode) in your
+   keymaps, it will work seamlessly with operators.
+
+Q: Can I have different repeat behaviors for different motions?~
+A: Yes, the last motion executed will be the one repeated. Each call to
+   |repmove.make()| can have its own repeat behavior.
+
+Q: Why do I need to use { expr = true }?~
+A: The plugin returns functions that need to be evaluated when the key is
+   pressed. The expr option tells Neovim to evaluate the function and use
+   its return value.
+
+Q: Can I customize which keys are used for repeat?~
+A: While the plugin is designed to work with |;| and |,|, you can bind
+   |repmove.semicolon()| and |repmove.comma()| to any keys you want.
+
+==============================================================================
+9. LICENSE                                                   *repmove-license*
+
+MIT License
+
+Copyright (c) 2024 Kaiser-Yang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
