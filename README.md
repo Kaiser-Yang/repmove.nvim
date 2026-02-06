@@ -54,7 +54,7 @@ If you don't use other jump plugins and just want to add repeat movement support
 local repmove = require('repmove')
 
 -- Create repeatable versions of f and F
-local f_forward, f_backward = repmove.make('F', 'f', ',', ';')
+local f_backward, f_forward = repmove.make('F', 'f', ',', ';')
 
 -- Bind to keys
 vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
@@ -95,14 +95,14 @@ vim.keymap.set({ 'n', 'x', 'o' }, '<Plug>(flash-T)', function()
 end)
 
 -- Create repeatable versions
-local f_forward, f_backward = repmove.make(
+local f_backward, f_forward = repmove.make(
   '<Plug>(flash-F)',  -- prev: backward search
   '<Plug>(flash-f)',  -- next: forward search
   '<Plug>(flash-F)',  -- what comma calls (backward)
   '<Plug>(flash-f)'   -- what semicolon calls (forward)
 )
 
-local t_forward, t_backward = repmove.make(
+local t_backward, t_forward = repmove.make(
   '<Plug>(flash-T)',
   '<Plug>(flash-t)',
   '<Plug>(flash-T)',

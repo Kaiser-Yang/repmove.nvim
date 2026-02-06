@@ -54,7 +54,7 @@ Plug 'Kaiser-Yang/repmove.nvim'
 local repmove = require('repmove')
 
 -- 为 f 和 F 创建可重复的版本
-local f_forward, f_backward = repmove.make('F', 'f', ',', ';')
+local f_backward, f_forward = repmove.make('F', 'f', ',', ';')
 
 -- 绑定到按键
 vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
@@ -95,14 +95,14 @@ vim.keymap.set({ 'n', 'x', 'o' }, '<Plug>(flash-T)', function()
 end)
 
 -- 创建可重复的版本
-local f_forward, f_backward = repmove.make(
+local f_backward, f_forward = repmove.make(
   '<Plug>(flash-F)',  -- prev: 向后搜索
   '<Plug>(flash-f)',  -- next: 向前搜索
   '<Plug>(flash-F)',  -- 按下逗号时调用（向后）
   '<Plug>(flash-f)'   -- 按下分号时调用（向前）
 )
 
-local t_forward, t_backward = repmove.make(
+local t_backward, t_forward = repmove.make(
   '<Plug>(flash-T)',
   '<Plug>(flash-t)',
   '<Plug>(flash-T)',

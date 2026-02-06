@@ -68,7 +68,7 @@ Basic configuration with default f/F/t/T motions:~
     local repmove = require('repmove')
 
     -- Create repeatable f and F
-    local f_forward, f_backward = repmove.make('F', 'f', ',', ';')
+    local f_backward, f_forward = repmove.make('F', 'f', ',', ';')
 
     -- Bind to keys
     vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
@@ -187,14 +187,14 @@ For users who want basic repeat movement with default Vim motions:
     local repmove = require('repmove')
 
     -- f and F
-    local f_back, f_forward = repmove.make('F', 'f', ',', ';')
+    local f_backward, f_forward = repmove.make('F', 'f', ',', ';')
     vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
-    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_back, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_backward, { expr = true })
 
     -- t and T
-    local t_back, t_forward = repmove.make('T', 't', ',', ';')
+    local t_backward, t_forward = repmove.make('T', 't', ',', ';')
     vim.keymap.set({ 'n', 'x', 'o' }, 't', t_forward, { expr = true })
-    vim.keymap.set({ 'n', 'x', 'o' }, 'T', t_back, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'T', t_backward, { expr = true })
 
     -- Repeat keys
     vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
@@ -222,7 +222,7 @@ For users of flash.nvim who want to preserve repeat movement:
     end)
 
     -- Create repeatable versions
-    local f_back, f_forward = repmove.make(
+    local f_backward, f_forward = repmove.make(
       '<Plug>(flash-F)',
       '<Plug>(flash-f)',
       '<Plug>(flash-F)',
@@ -231,7 +231,7 @@ For users of flash.nvim who want to preserve repeat movement:
 
     -- Bind to keys
     vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
-    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_back, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_backward, { expr = true })
 
     -- Repeat keys
     vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
@@ -255,7 +255,7 @@ For users who want to create custom repeatable motions:
     end
 
     -- Make them repeatable
-    local back, forward = repmove.make(
+    local backward, forward = repmove.make(
       search_backward,
       search_forward,
       search_backward,
@@ -263,7 +263,7 @@ For users who want to create custom repeatable motions:
     )
 
     vim.keymap.set({ 'n', 'x', 'o' }, '<leader>w', forward, { expr = true })
-    vim.keymap.set({ 'n', 'x', 'o' }, '<leader>b', back, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, '<leader>b', backward, { expr = true })
     vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
     vim.keymap.set({ 'n', 'x', 'o' }, ',', repmove.comma, { expr = true })
 <
@@ -277,7 +277,7 @@ For users of nvim-treesitter-textobjects:
     local ts_repeat = require('nvim-treesitter.textobjects.repeatable_move')
 
     -- Use treesitter's builtin f/F
-    local f_back, f_forward = repmove.make(
+    local f_backward, f_forward = repmove.make(
       ts_repeat.builtin_F,
       ts_repeat.builtin_f,
       ts_repeat.builtin_F,
@@ -285,7 +285,7 @@ For users of nvim-treesitter-textobjects:
     )
 
     vim.keymap.set({ 'n', 'x', 'o' }, 'f', f_forward, { expr = true })
-    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_back, { expr = true })
+    vim.keymap.set({ 'n', 'x', 'o' }, 'F', f_backward, { expr = true })
 
     -- Repeat keys
     vim.keymap.set({ 'n', 'x', 'o' }, ';', repmove.semicolon, { expr = true })
