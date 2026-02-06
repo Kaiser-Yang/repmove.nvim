@@ -29,9 +29,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
   'Kaiser-Yang/repmove.nvim',
-  config = function()
-    -- Your configuration here
-  end
+  opts = {}
 }
 ```
 
@@ -41,7 +39,7 @@ Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
 use {
   'Kaiser-Yang/repmove.nvim',
   config = function()
-    -- Your configuration here
+    require('repmove').setup()
   end
 }
 ```
@@ -54,33 +52,57 @@ Plug 'Kaiser-Yang/repmove.nvim'
 
 ## Quick Start
 
-### Basic Usage (Built-in Neovim Motions)
+### Step 1: Bind Semicolon and Comma (Essential)
+
+**This is the foundation of repmove.nvim.** You must bind `;` and `,` to the repeat functions. While you can technically use other keys, **semicolon and comma are highly recommended** as they follow Vim's traditional repeat motion keys.
+
+```lua
+local repmove = require('repmove')
+
+-- Bind ; and , to repeat motions
+vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
+vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
+```
+
+After setting this up, any motion you wrap with `repmove.make()` can be repeated using `;` (forward) and `,` (backward).
+
+### Step 2: Wrap Your Motions
+
+Now you can wrap any motion to make it repeatable:
+
+#### Basic Usage (Built-in Neovim Motions)
 
 If you're not using any other jump plugin, you can easily wrap Neovim's built-in `f`/`F` motions:
 
 ```lua
 local repmove = require('repmove')
 
+-- Bind ; and , first (required)
+vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
+vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
+
 -- Create repeatable versions of f and F
-local prev_f, next_f = repmove.make('F', 'f', ',', ';')
+local prev_f, next_f = repmove.make('F', 'f')
 
 -- Map to keys
 vim.keymap.set({'n', 'x', 'o'}, 'f', next_f, { expr = true })
 vim.keymap.set({'n', 'x', 'o'}, 'F', prev_f, { expr = true })
-
--- Map ; and , to repeat the motion
-vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
-vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
 ```
 
-### Integration with flash.nvim
+Now `f` and `F` can be repeated with `;` and `,`!
+
+#### Integration with flash.nvim
 
 Here's how to integrate repmove.nvim with [flash.nvim](https://github.com/folke/flash.nvim):
 
 ```lua
 local repmove = require('repmove')
 
--- Configure flash.nvim to use different keys
+-- Bind ; and , first (required)
+vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
+vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
+
+-- Configure flash.nvim (don't let it bind ; and ,)
 require('flash').setup({
   modes = {
     char = {
@@ -92,25 +114,17 @@ require('flash').setup({
   },
 })
 
--- Create repeatable versions using flash's functions
-local prev_f, next_f = repmove.make(
-  function() require('flash').jump({ forward = false, pattern = vim.fn.getcmdline() }) end,
-  function() require('flash').jump({ forward = true, pattern = vim.fn.getcmdline() }) end,
-  function() require('flash').jump({ forward = false, pattern = vim.fn.getcmdline() }) end,
-  function() require('flash').jump({ forward = true, pattern = vim.fn.getcmdline() }) end
-)
+-- Wrap flash motions with repmove
+local function flash_jump(forward)
+  return function()
+    require('flash').jump({ forward = forward })
+  end
+end
 
--- Or more simply, using flash's existing keymaps as references
-vim.keymap.set({'n', 'x', 'o'}, 'f', function()
-  require('flash').jump({ forward = true })
-end)
-vim.keymap.set({'n', 'x', 'o'}, 'F', function()
-  require('flash').jump({ forward = false })
-end)
+local prev_flash, next_flash = repmove.make(flash_jump(false), flash_jump(true))
 
--- Map ; and , to repeat ANY motion
-vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
-vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
+vim.keymap.set({'n', 'x', 'o'}, 'f', next_flash, { expr = true })
+vim.keymap.set({'n', 'x', 'o'}, 'F', prev_flash, { expr = true })
 ```
 
 ## API Documentation
@@ -120,30 +134,30 @@ vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
 Creates a pair of functions that support repeat movement.
 
 **Parameters:**
-- `prev` (`function|string`): The "backward" motion command or function
-- `next` (`function|string`): The "forward" motion command or function  
+- `prev` (`function|string`): The "previous" motion command or function (typically moves backward, e.g., `F`)
+- `next` (`function|string`): The "next" motion command or function (typically moves forward, e.g., `f`)
 - `comma` (`function|string`, optional): What to execute when `,` is pressed (defaults to `prev`)
 - `semicolon` (`function|string`, optional): What to execute when `;` is pressed (defaults to `next`)
 
 **Returns:**
-- `function`: The wrapped "prev" function (for backward motion)
-- `function`: The wrapped "next" function (for forward motion)
+- `function`: The wrapped "prev" function 
+- `function`: The wrapped "next" function
 
 **Example:**
 ```lua
 -- Simple case: wrap built-in f and F
-local prev_f, next_f = repmove.make('F', 'f', ',', ';')
+local prev_f, next_f = repmove.make('F', 'f')
 
 -- Custom functions
 local prev_custom, next_custom = repmove.make(
-  function() print('going backward') end,
-  function() print('going forward') end
+  function() print('going to previous') end,
+  function() print('going to next') end
 )
 ```
 
 ### `repmove.semicolon()`
 
-Returns a function that repeats the last motion forward.
+Executes the last motion in the forward/next direction.
 
 **Usage:**
 ```lua
@@ -152,39 +166,61 @@ vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
 
 ### `repmove.comma()`
 
-Returns a function that repeats the last motion backward.
+Executes the last motion in the backward/previous direction.
 
 **Usage:**
 ```lua
 vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
 ```
 
+### `repmove.setup()`
+
+Empty setup function for compatibility. No configuration needed.
+
+**Usage:**
+```lua
+require('repmove').setup()
+```
+
 ## Advanced Examples
 
 ### Example 1: Using with nvim-treesitter-textobjects
 
+Wrap nvim-treesitter-textobjects motions to make them repeatable with repmove.nvim:
+
 ```lua
 local repmove = require('repmove')
-local ts_repeat_move = require('nvim-treesitter.textobjects.repeatable_move')
 
--- Make treesitter motions repeatable
-local prev_func, next_func = repmove.make(
-  ts_repeat_move.builtin_F,
-  ts_repeat_move.builtin_f,
-  ',',
-  ';'
-)
-
-vim.keymap.set({'n', 'x', 'o'}, 'f', next_func, { expr = true })
-vim.keymap.set({'n', 'x', 'o'}, 'F', prev_func, { expr = true })
+-- Bind ; and , first
 vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
 vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
+
+-- Get the textobjects motions from nvim-treesitter
+local ts_move = require('nvim-treesitter.textobjects.move')
+
+-- Wrap textobjects motions with repmove
+local function goto_next_start()
+  ts_move.goto_next_start('@function.outer')
+end
+
+local function goto_previous_start()
+  ts_move.goto_previous_start('@function.outer')
+end
+
+local prev_func, next_func = repmove.make(goto_previous_start, goto_next_start)
+
+vim.keymap.set({'n', 'x', 'o'}, ']f', next_func)
+vim.keymap.set({'n', 'x', 'o'}, '[f', prev_func)
 ```
 
 ### Example 2: Multiple Repeatable Motions
 
 ```lua
 local repmove = require('repmove')
+
+-- Bind ; and , first
+vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
+vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
 
 -- Repeatable f/F
 local prev_f, next_f = repmove.make('F', 'f')
@@ -201,9 +237,7 @@ local prev_search, next_search = repmove.make('N', 'n')
 vim.keymap.set({'n', 'x', 'o'}, 'n', next_search, { expr = true })
 vim.keymap.set({'n', 'x', 'o'}, 'N', prev_search, { expr = true })
 
--- Map ; and , to repeat ANY of the above motions
-vim.keymap.set({'n', 'x', 'o'}, ';', repmove.semicolon, { expr = true })
-vim.keymap.set({'n', 'x', 'o'}, ',', repmove.comma, { expr = true })
+-- Now ; and , will repeat ANY of the above motions!
 ```
 
 ## How It Works

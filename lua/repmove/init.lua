@@ -58,4 +58,7 @@ end
 function M.comma() return last_motion.backward() end
 function M.semicolon() return last_motion.forward() end
 
+--- Setup function (no-op, for compatibility)
+function M.setup() end
+
 return M
