@@ -21,12 +21,14 @@ end
 --- @param prev_func function|string
 --- @param next_func function|string
 --- @param is_prev boolean
---- @param backward function|string
---- @param forward function|string
+--- @param backward? function|string
+--- @param forward? function|string
 --- @return function
 local function repeat_wrap(prev_func, next_func, is_prev, backward, forward)
   prev_func = ensure_function(prev_func)
   next_func = ensure_function(next_func)
+  if backward == nil then backward = is_prev and next_func or prev_func end
+  if forward == nil then forward = is_prev and prev_func or next_func end
   backward = ensure_function(backward)
   forward = ensure_function(forward)
   return function(...)
@@ -49,8 +51,6 @@ end
 --- @return function
 --- @return function
 function M.make(prev, next, comma, semicolon)
-  comma = comma or prev
-  semicolon = semicolon or next
   return repeat_wrap(prev, next, true, comma, semicolon), repeat_wrap(prev, next, false, comma, semicolon)
 end
 
