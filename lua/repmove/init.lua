@@ -1,15 +1,8 @@
 ---@diagnostic disable: missing-parameter
 local M = {}
 
---- @param value any
---- @return function
-local function ensure_function(value)
-  if type(value) == 'function' then return value end
-  return function() return value end
-end
-
 --- @type RepMove.RepeatInfo
-local last_motion = { forward = ensure_function(';'), backward = ensure_function(',') }
+local last_motion = { forward = M.ensure_function(';'), backward = M.ensure_function(',') }
 
 --- @param func function
 --- @param args table
@@ -25,12 +18,12 @@ end
 --- @param forward? function|string
 --- @return function
 local function repeat_wrap(prev_func, next_func, is_prev, backward, forward)
-  prev_func = ensure_function(prev_func)
-  next_func = ensure_function(next_func)
+  prev_func = M.ensure_function(prev_func)
+  next_func = M.ensure_function(next_func)
   if backward == nil then backward = is_prev and next_func or prev_func end
   if forward == nil then forward = is_prev and prev_func or next_func end
-  backward = ensure_function(backward)
-  forward = ensure_function(forward)
+  backward = M.ensure_function(backward)
+  forward = M.ensure_function(forward)
   return function(...)
     local args = { ... }
     last_motion.forward = repeatable_wrap(forward, args)
@@ -46,12 +39,12 @@ end
 --- Wrap two repeatable actions.
 --- @param prev function|string
 --- @param next function|string
---- @param comma? function|string
---- @param semicolon? function|string
+--- @param backward? function|string
+--- @param forward? function|string
 --- @return function
 --- @return function
-function M.make(prev, next, comma, semicolon)
-  return repeat_wrap(prev, next, true, comma, semicolon), repeat_wrap(prev, next, false, comma, semicolon)
+function M.make(prev, next, backward, forward)
+  return repeat_wrap(prev, next, true, backward, forward), repeat_wrap(prev, next, false, backward, forward)
 end
 
 -- NOTE: We must wrap here to ensure we can get the changed "backword" and "forward"

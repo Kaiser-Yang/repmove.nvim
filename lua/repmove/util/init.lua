@@ -30,4 +30,11 @@ function M.ensure_list(value)
   end
 end
 
+--- @param value any
+--- @return function
+function M.ensure_function(value)
+  if type(value) == 'function' then return value end
+  return function() return value end
+end
+
 return M
